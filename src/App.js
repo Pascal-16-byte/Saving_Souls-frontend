@@ -1,30 +1,58 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import ChatPage from "./pages/ChatPage";
+import React, { useState, useEffect } from "react";
+import OnboardingWizard from "./pages/OnboardingWizard";
 import StoriesPage from "./pages/StoriesPage";
-import PostStoryPage from "./pages/PostStoryPage";
+import ChatPage from "./pages/ChatPage";
 import ModeratorDashboard from "./pages/ModeratorDashboard";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-function App(){
+function App() {
+  // Load user from localStorage if returning
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Save user to localStorage after onboarding
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  }, [user]);
+
+  // Protect routes: require onboarding first
+  const RequireOnboarding = ({ children }) => {
+    return user ? children : <Navigate to="/" />;
+  };
+
   return (
     <Router>
-      <div className="min-h-screen p-6">
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold">^_^Saving Souls^_^ (MVP)</h1>
-          <nav className="mt-2 space-x-4">
-            <Link to="/chat" className="text-blue-600">Chat</Link>
-            <Link to="/stories" className="text-blue-600">Stories</Link>
-            <Link to="/post" className="text-blue-600">Post</Link>
-          </nav>
-        </header>
-        <Routes>
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/stories" element={<StoriesPage />} />
-          <Route path="/post" element={<PostStoryPage />} />
-          <Route path="/" element={<ChatPage />} />
-          <Route path="/moderator" element={<ModeratorDashboard />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Onboarding */}
+        <Route path="/" element={!user ? <OnboardingWizard onComplete={setUser} /> : <Navigate to="/stories" />} />
+
+        {/* Stories Page */}
+        <Route
+          path="/stories"
+          element={
+            <RequireOnboarding>
+              <StoriesPage user={user} />
+            </RequireOnboarding>
+          }
+        />
+
+        {/* Chat Page */}
+        <Route
+          path="/chat"
+          element={
+            <RequireOnboarding>
+              <ChatPage user={user} />
+            </RequireOnboarding>
+          }
+        />
+
+        {/* Moderator Dashboard */}
+        <Route path="/moderator" element={<ModeratorDashboard />} />
+      </Routes>
     </Router>
   );
 }
