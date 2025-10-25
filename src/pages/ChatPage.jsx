@@ -1,6 +1,6 @@
 // src/pages/ChatPage.jsx
 import React, { useState } from "react";
-import NavBar from "../components/NavBar";
+import NavBar from "../pages/NavBar";
 
 export default function ChatPage({ user }) {
   const [messages, setMessages] = useState([
